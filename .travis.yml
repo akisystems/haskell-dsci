@@ -17,6 +17,7 @@ cache:
     - $HOME/.stack/
 
 before_install:
+- apt-get install -y docker
 - docker build -t verbs .
 - docker images -a
 - mkdir -p ~/.local/bin
