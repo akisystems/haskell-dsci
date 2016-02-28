@@ -26,4 +26,4 @@ install:
 - stack build --no-terminal --skip-ghc-check --no-system-ghc
 
 script:
-- stack --no-terminal --skip-ghc-check --no-system-ghc test
+- stack --no-terminal --skip-ghc-check --no-system-ghc test --coverage
