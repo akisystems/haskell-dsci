@@ -4,6 +4,7 @@ import Test.QuickCheck
 import Test.QuickCheck.All
 
 import CFUnitTests
+import CFSpec
 
 main :: IO ()
-main = runTests >> (putStrLn "Done")
+main = runTests >> specMain

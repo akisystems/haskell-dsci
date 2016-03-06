@@ -1,28 +1,33 @@
 module CF
--- rename to haskdsci
-    ( Point,
-      Sample,
-      manhattan,
-      euclidean
---, --      minkowski
-    ) where
+where
 
-type Item = String
+import qualified Data.Map.Strict as M
 
 type Score = Float
 
 type Point = (Score, Score)
 
-data Sample a = Rating a [(Item, Score)] deriving (Show, Eq)
+type Samples b = [(b, Score)]
+
+type ScoreMap b = (M.Map b Score)
+
+-- | The collection of a user's ratings
+-- | where a is the user identifier type, b is the item identifier type
+data UserSamples a b = Rating a (ScoreMap b) deriving (Show, Eq)
 
 -- | The manhattan distance function
-manhattan :: Point -> Point -> Score
-manhattan (x1,y1) (x2,y2) = (abs (x1 - x2)) + (abs  (y1 - y2))
+manhattan :: Score -> Score -> Score
+manhattan a b = abs (a - b)
 
 -- | The euclidean distance function
-euclidean :: Point -> Point -> Score
-euclidean (x1,y1) (x2,y2) = sqrt $ xsq + ysq
-  where x = (x1 - x2)
-        xsq = x * x
-        y = (y1 - y2)
+euclidean :: Score -> Score -> Score
+euclidean x y = sqrt $ xsq + ysq
+  where xsq = x * x
         ysq = y * y
+        
+distance :: (Score -> Score -> Score) -> ScoreMap String -> ScoreMap String -> Score
+distance f a b = sum $ map snd $ M.toList $ 
+  M.mapWithKey (\k v -> 
+    case (M.lookup k b) of
+      Just v2 -> f v v2
+      _      -> 0) a
