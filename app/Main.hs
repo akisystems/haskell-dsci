@@ -1,6 +1,6 @@
 module Main where
 
-import CF
+import Data.Science.CF
 
 main :: IO ()
 main = putStrLn "To do"

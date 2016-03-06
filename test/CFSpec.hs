@@ -3,7 +3,7 @@ module CFSpec (
   ) where
   
 import qualified Data.Map.Strict as M
-import CF
+import Data.Science.CF
 import Test.Hspec
 
 -- musicDataset :: [Sample String String]

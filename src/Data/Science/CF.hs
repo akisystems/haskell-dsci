@@ -1,4 +1,4 @@
-module CF
+module Data.Science.CF
 where
 
 import qualified Data.Map.Strict as M
@@ -15,16 +15,18 @@ type ScoreMap b = (M.Map b Score)
 -- | where a is the user identifier type, b is the item identifier type
 data UserSamples a b = Rating a (ScoreMap b) deriving (Show, Eq)
 
+-- | The minkowski distance function, where r is the exponent
+minkowski :: Score -> Score -> Int -> Score
+minkowski a b r = (abs (a - b)) ^ r
+
 -- | The manhattan distance function
 manhattan :: Score -> Score -> Score
-manhattan a b = abs (a - b)
+manhattan a b = minkowski a b 1
 
 -- | The euclidean distance function
 euclidean :: Score -> Score -> Score
-euclidean x y = sqrt $ xsq + ysq
-  where xsq = x * x
-        ysq = y * y
-        
+euclidean a b = minkowski a b 2
+
 distance :: (Score -> Score -> Score) -> ScoreMap String -> ScoreMap String -> Score
 distance f a b = sum $ map snd $ M.toList $ 
   M.mapWithKey (\k v -> 
