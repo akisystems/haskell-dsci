@@ -27,9 +27,10 @@ manhattan a b = minkowski a b 1
 euclidean :: Score -> Score -> Score
 euclidean a b = minkowski a b 2
 
-distance :: (Score -> Score -> Score) -> ScoreMap String -> ScoreMap String -> Score
-distance f a b = sum $ map snd $ M.toList $ 
-  M.mapWithKey (\k v -> 
-    case (M.lookup k b) of
-      Just v2 -> f v v2
-      _      -> 0) a
+-- | Using the the function supplied, compute the distance  from the two sets of scores
+distanceWith :: (Score -> Score -> Score) -> ScoreMap String -> ScoreMap String -> Score
+distanceWith f a b = 
+  M.foldrWithKey (\k v acc -> 
+      case (M.lookup k b) of
+        Just v2 -> acc + (f v v2)
+        _       -> acc) 0 a
