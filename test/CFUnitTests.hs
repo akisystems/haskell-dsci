@@ -11,9 +11,9 @@ prop_Manhattan a b = (manhattan a b) == abs (a - b)
 
 prop_EuclideanNeverZero :: [Score] -> [Score] -> Bool
 prop_EuclideanNeverZero a b = sumZero || (euclidean a b) >= 0
-      where sumA       = sum a
-            sumB       = sum b
-            sumZero  = 0.0 == sumA + sumB
+      where sumA    = sum a
+            sumB    = sum b
+            sumZero = 0.0 == sumA + sumB
             
 prop_MinkowskiMatchesManhattan :: Score -> Score -> Bool
 prop_MinkowskiMatchesManhattan a b = (minkowski a b 1) == (manhattan a b)
