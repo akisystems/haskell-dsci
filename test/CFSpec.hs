@@ -1,7 +1,4 @@
-module CFSpec (
-    specMain
-  ) where
-  
+module CFSpec where 
 import qualified Data.Map.Strict as M
 import Data.Science.CF
 import Test.Hspec
@@ -74,7 +71,8 @@ specMain = hspec $ do
             (distanceWith manhattan samplesForAngelica (M.difference samplesForAngelica samplesForBill)) `shouldBe` 0.0
             
         it "euclidean should correctly compute" $ do
-            (distancesWith euclidean samplesForAngelica samplesForBill) `shouldBe` 4.2426405
+            (distancesWith euclidean samplesForAngelica samplesForBill) `shouldBe` 4.3011627
+            (distancesWith euclidean samplesForHailey samplesForVeronica) `shouldBe` (sqrt 2)
 
         it "euclidean should result in 0 for no ratings in common" $ do
             (distancesWith euclidean emptySamples emptySamples) `shouldBe` 0.0
