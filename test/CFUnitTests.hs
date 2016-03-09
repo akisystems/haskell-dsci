@@ -10,9 +10,8 @@ prop_Manhattan :: Score -> Score -> Bool
 prop_Manhattan a b = (manhattan a b) == abs (a - b)
 
 prop_EuclideanNeverZero :: [Score] -> [Score] -> Bool
-prop_EuclideanNeverZero a b = sumZero || equal || (euclidean a b) >= 0
-      where equal = a == b
-            sumA       = sum a
+prop_EuclideanNeverZero a b = sumZero || (euclidean a b) >= 0
+      where sumA       = sum a
             sumB       = sum b
             sumZero  = 0.0 == sumA + sumB
             
