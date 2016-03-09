@@ -38,6 +38,8 @@ distanceWith f a b =
 -- | Apply the given distance function across all eligable ratings
 -- | Eligible ratings are the intersection of l and r
 distancesWith :: (Ord k) => ([Score] -> [Score] -> Score) -> ScoreMap k -> ScoreMap k -> Score
-distancesWith f l r = f (M.elems lIsect) (M.elems rIsect)
+distancesWith f l r = f lItems rItems
   where lIsect = M.intersection l r
         rIsect = M.intersection r l
+        lItems = (M.elems lIsect)
+        rItems = (M.elems rIsect)
