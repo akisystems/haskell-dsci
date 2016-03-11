@@ -6,17 +6,18 @@ import Test.QuickCheck.All
 
 import Data.Science.CF
 
-prop_Manhattan :: Score -> Score -> Bool
-prop_Manhattan a b = (manhattan a b) == abs (a - b)
+-- | An abstraction for distance functions
+type DistFunc = ([Score] -> [Score] -> Score)
+
+-- | General property for distance functions that should never yield zero/negative
+atLeastZeroProp :: DistFunc -> [Score] -> [Score] -> Bool
+atLeastZeroProp f a b = (f a b) >= 0
+
+prop_ManhattanNeverZero :: [Score] -> [Score] -> Bool
+prop_ManhattanNeverZero a b = atLeastZeroProp manhattan a b
 
 prop_EuclideanNeverZero :: [Score] -> [Score] -> Bool
-prop_EuclideanNeverZero a b = sumZero || (euclidean a b) >= 0
-      where sumA    = sum a
-            sumB    = sum b
-            sumZero = 0.0 == sumA + sumB
-            
-prop_MinkowskiMatchesManhattan :: Score -> Score -> Bool
-prop_MinkowskiMatchesManhattan a b = (minkowski a b 1) == (manhattan a b)
+prop_EuclideanNeverZero a b = atLeastZeroProp euclidean a b
 
 return []
 runTests = $quickCheckAll
