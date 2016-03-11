@@ -66,11 +66,11 @@ closestRatings f u s = nrRatings
         isNeighbour (Rating k _) = k == neighbour
 
 recommend :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(k, Score)]
-recommend f u s = sortBy lowestScoreFirst recommendations
+recommend f u s = sortBy highestFirst recommendations
   where uRatings  = ratings u
         clRatings = closestRatings f u s
         recommendations = M.toList $ M.difference clRatings uRatings
-        lowestScoreFirst (_,s1) (_,s2) 
+        highestFirst (_,s1) (_,s2) 
                     | s1 > s2 = LT
                     | s1 < s2 = GT
                     | otherwise = EQ
