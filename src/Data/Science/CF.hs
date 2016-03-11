@@ -6,6 +6,7 @@ import Data.List
 
 type Score = Float
 
+-- | The mapping of all items to the user's Score
 type ScoreMap b = (M.Map b Score)
 
 -- | The collection of a user's ratings
@@ -53,3 +54,23 @@ sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k ->
 sortNeighbours f u s = sort $ map dist s
   where iden (Rating a m) = a
         dist sample = (computeDistance f u sample, iden sample)
+        
+-- | Return the head from sortNeighbours
+closestNeighbour :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> (Score, k)
+closestNeighbour f u s = head $ sortNeighbours f u s
+
+closestRatings :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> ScoreMap k
+closestRatings f u s = nrRatings
+  where neighbour = snd $ closestNeighbour f u s
+        nrRatings = ratings $ head $ filter isNeighbour s
+        isNeighbour (Rating k _) = k == neighbour
+
+recommend :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(k, Score)]
+recommend f u s = sortBy lowestScoreFirst recommendations
+  where uRatings  = ratings u
+        clRatings = closestRatings f u s
+        recommendations = M.toList $ M.difference clRatings uRatings
+        lowestScoreFirst (_,s1) (_,s2) 
+                    | s1 > s2 = LT
+                    | s1 < s2 = GT
+                    | otherwise = EQ

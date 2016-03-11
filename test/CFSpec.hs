@@ -1,5 +1,6 @@
 module CFSpec where 
 import qualified Data.Map.Strict as M
+import Data.List (delete)
 import Data.Science.CF
 import Test.Hspec
 
@@ -63,7 +64,11 @@ veronica = Rating "Veronica" $ M.fromList [("Blues Traveler", 3.0),
                        
 allSamples = [angelica, bill, chan, dan, hailey, jordyn, sam, veronica]
 
-allButHailey = [angelica, bill, chan, dan, jordyn, sam, veronica]
+allButHailey = delete hailey allSamples
+
+allButChan = delete chan allSamples
+
+haileyNeighbours = [(2.0, "Veronica"), (4.0, "Chan"),(4.0, "Sam"), (4.5, "Dan"), (5.0, "Angelica"), (5.5, "Bill"), (7.5, "Jordyn")]
 
 emptySamples = Rating "Empty" M.empty
 
@@ -97,4 +102,10 @@ specMain = hspec $ do
             -- e.g. (computeDistance euclidean bill bill) == 0.0, but they've everything in common
             
         it "sortNeighbour for Hailey" $ do
-          (sortNeighbours manhattan hailey allButHailey) `shouldBe` [(2.0, "Veronica"), (4.0, "Chan"),(4.0, "Sam"), (4.5, "Dan"), (5.0, "Angelica"), (5.5, "Bill"), (7.5, "Jordyn")]
+          (sortNeighbours manhattan hailey allButHailey) `shouldBe` haileyNeighbours
+          
+        it "recommend for Hailey" $ do
+          (recommend manhattan hailey allButHailey) `shouldBe` [("Phoenix", 4.0), ("Blues Traveler", 3.0), ("Slightly Stoopid", 2.5)]
+          
+        it "recommend for Chan" $ do
+          (recommend manhattan chan allButChan) `shouldBe` [("The Strokes", 4.0), ("Vampire Weekend", 1.0)]
