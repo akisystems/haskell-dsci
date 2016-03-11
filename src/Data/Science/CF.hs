@@ -12,34 +12,31 @@ type ScoreMap b = (M.Map b Score)
 data UserSamples a b = Rating a (ScoreMap b) deriving (Show, Eq)
 
 -- | The minkowski distance function, where r is the exponent
-minkowski :: Score -> Score -> Int -> Score
+minkowski :: Score-> Score -> Int -> Score
 minkowski a b r = dif ** ex
   where dif = (abs (a - b)) :: Float
         ex  = (fromIntegral r)
 
 -- | The manhattan distance function
-manhattan :: Score -> Score -> Score
-manhattan a b = minkowski a b 1
+manhattan :: [Score] -> [Score] -> Score
+manhattan [] _ = 0
+manhattan _ [] = 0
+manhattan l r = foldl mink 0 $ zip l r
+  where mink u (a,b) = u + minkowski a b 1
 
 -- | The euclidean distance function
 euclidean :: [Score] -> [Score] -> Score
 euclidean l r = sqrt $ foldl mink 0 $ zip l r
   where mink u (a,b) = u + minkowski a b 2
 
--- | Using the the function supplied, compute the distance from the two sets of scores
--- | for ratings that are eligible
-distanceWith :: (Ord k) => (Score -> Score -> Score) -> ScoreMap k -> ScoreMap k -> Score
-distanceWith f a b = 
-  M.foldrWithKey (\k v t -> 
-      case (M.lookup k b) of
-        Just v2 -> t + (f v v2)
-        Nothing -> t) 0 a
-
 -- | Apply the given distance function across all eligable ratings
 -- | Eligible ratings are the intersection of l and r
-distancesWith :: (Ord k) => ([Score] -> [Score] -> Score) -> ScoreMap k -> ScoreMap k -> Score
-distancesWith f l r = f lItems rItems
+distanceWith :: (Ord k) => ([Score] -> [Score] -> Score) -> ScoreMap k -> ScoreMap k -> Score
+distanceWith f l r = f lItems rItems
   where lIsect = M.intersection l r
         rIsect = M.intersection r l
         lItems = (M.elems lIsect)
         rItems = (M.elems rIsect)
+        
+sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> Score
+sortNeighbours f u s = error "LOL"
