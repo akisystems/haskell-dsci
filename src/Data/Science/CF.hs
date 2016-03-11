@@ -11,6 +11,10 @@ type ScoreMap b = (M.Map b Score)
 -- | where a is the user identifier type, b is the item identifier type
 data UserSamples a b = Rating a (ScoreMap b) deriving (Show, Eq)
 
+-- | Return just the item ratings for the given sample
+ratings :: UserSamples a b -> ScoreMap b
+ratings (Rating a m) = m
+
 -- | The minkowski distance function, where r is the exponent
 minkowski :: Score-> Score -> Int -> Score
 minkowski a b r = dif ** ex
@@ -38,5 +42,10 @@ distanceWith f l r = f lItems rItems
         lItems = (M.elems lIsect)
         rItems = (M.elems rIsect)
         
-sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> Score
+computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> UserSamples k k -> Score
+computeDistance f l r = distanceWith f ls rs
+  where ls = ratings l
+        rs = ratings r
+        
+sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(Score, k)]
 sortNeighbours f u s = error "LOL"
