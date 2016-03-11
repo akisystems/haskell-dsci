@@ -63,6 +63,8 @@ veronica = Rating "Veronica" $ M.fromList [("Blues Traveler", 3.0),
                        
 allSamples = [angelica, bill, chan, dan, hailey, jordyn, sam, veronica]
 
+allButHailey = [angelica, bill, chan, dan, jordyn, sam, veronica]
+
 emptySamples = Rating "Empty" M.empty
 
 nothingInCommon :: Ord b => UserSamples String b -> UserSamples String b -> UserSamples String b
@@ -94,5 +96,5 @@ specMain = hspec $ do
             -- Need to think about 0.0 when no difference, as this leads to misreading nothing in common,
             -- e.g. (computeDistance euclidean bill bill) == 0.0, but they've everything in common
             
-        --it "sortNeighbour for Hailey" $ do
-          --(sortNeighbours euclidean hailey allSamples) `shouldBe` [(2.0, "Veronica"), (4.0, "Chan"),(4.0, "Sam"), (4.5, "Dan"), (5.0, "Angelica"), (5.5, "Bill"), (7.5, "Jordyn")]
+        it "sortNeighbour for Hailey" $ do
+          (sortNeighbours manhattan hailey allButHailey) `shouldBe` [(2.0, "Veronica"), (4.0, "Chan"),(4.0, "Sam"), (4.5, "Dan"), (5.0, "Angelica"), (5.5, "Bill"), (7.5, "Jordyn")]

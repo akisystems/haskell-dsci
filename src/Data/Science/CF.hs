@@ -2,6 +2,7 @@ module Data.Science.CF
 where
 
 import qualified Data.Map.Strict as M
+import Data.List
 
 type Score = Float
 
@@ -43,9 +44,12 @@ distanceWith f l r = f lItems rItems
         rItems = (M.elems rIsect)
         
 computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> UserSamples k k -> Score
-computeDistance f l r = distanceWith f ls rs
-  where ls = ratings l
-        rs = ratings r
+computeDistance f l r = distanceWith f lr rr
+  where lr = ratings l
+        rr = ratings r
         
+-- | Compute the distances for the given samples from the user, using the function supplied, then sort by closest
 sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(Score, k)]
-sortNeighbours f u s = error "LOL"
+sortNeighbours f u s = sort $ map dist s
+  where iden (Rating a m) = a
+        dist sample = (computeDistance f u sample, iden sample)
