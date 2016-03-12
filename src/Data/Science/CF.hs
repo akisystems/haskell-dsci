@@ -41,8 +41,8 @@ distanceWith :: (Ord k) => ([Score] -> [Score] -> Score) -> ScoreMap k -> ScoreM
 distanceWith f l r = f lItems rItems
   where lIsect = M.intersection l r
         rIsect = M.intersection r l
-        lItems = (M.elems lIsect)
-        rItems = (M.elems rIsect)
+        lItems = M.elems lIsect
+        rItems = M.elems rIsect
         
 computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> UserSamples k k -> Score
 computeDistance f l r = distanceWith f lr rr
