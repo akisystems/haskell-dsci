@@ -17,6 +17,11 @@ data Sample a b = Rating a (ScoreMap b) deriving (Show, Eq)
 ratings :: Sample a b -> ScoreMap b
 ratings (Rating a m) = m
 
+-- | Find the user in the list of samples
+findUser :: Eq a => a -> [Sample a b] -> Sample a b
+findUser user s = head $ filter isUser s
+  where isUser (Rating k _) = k == user
+
 -- | The minkowski distance function, where r is the exponent
 minkowski :: Score-> Score -> Int -> Score
 minkowski a b r = dif ** ex
@@ -43,18 +48,18 @@ distanceWith f l r = f lItems rItems
         rIsect = M.intersection r l
         lItems = M.elems lIsect
         rItems = M.elems rIsect
-        
+
 computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> Sample k k -> Score
 computeDistance f l r = distanceWith f lr rr
   where lr = ratings l
         rr = ratings r
-        
+
 -- | Compute the distances for the given samples from the user, using the function supplied, then sort by closest
 sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> [(Score, k)]
 sortNeighbours f u s = sort $ map dist s
   where iden (Rating a m) = a
         dist sample = (computeDistance f u sample, iden sample)
-        
+
 -- | Return the head from sortNeighbours
 closestNeighbour :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> (Score, k)
 closestNeighbour f u s = head $ sortNeighbours f u s
@@ -62,15 +67,16 @@ closestNeighbour f u s = head $ sortNeighbours f u s
 closestRatings :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> ScoreMap k
 closestRatings f u s = nrRatings
   where neighbour = snd $ closestNeighbour f u s
-        nrRatings = ratings $ head $ filter isNeighbour s
-        isNeighbour (Rating k _) = k == neighbour
+        nrRatings = ratings $ findUser neighbour s
 
+-- | Recommend items from the nearest neighbour in the samples list for the given user,
+-- | sorted by highest scored item first
 recommend :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> [(k, Score)]
 recommend f u s = sortBy highestFirst recommendations
   where uRatings  = ratings u
         clRatings = closestRatings f u s
         recommendations = M.toList $ M.difference clRatings uRatings
-        highestFirst (_,s1) (_,s2) 
+        highestFirst (_,s1) (_,s2)
                     | s1 > s2 = LT
                     | s1 < s2 = GT
                     | otherwise = EQ
