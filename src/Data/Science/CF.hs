@@ -11,10 +11,10 @@ type ScoreMap b = (M.Map b Score)
 
 -- | The collection of a user's ratings
 -- | where a is the user identifier type, b is the item identifier type
-data UserSamples a b = Rating a (ScoreMap b) deriving (Show, Eq)
+data Sample a b = Rating a (ScoreMap b) deriving (Show, Eq)
 
 -- | Return just the item ratings for the given sample
-ratings :: UserSamples a b -> ScoreMap b
+ratings :: Sample a b -> ScoreMap b
 ratings (Rating a m) = m
 
 -- | The minkowski distance function, where r is the exponent
@@ -44,28 +44,28 @@ distanceWith f l r = f lItems rItems
         lItems = M.elems lIsect
         rItems = M.elems rIsect
         
-computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> UserSamples k k -> Score
+computeDistance :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> Sample k k -> Score
 computeDistance f l r = distanceWith f lr rr
   where lr = ratings l
         rr = ratings r
         
 -- | Compute the distances for the given samples from the user, using the function supplied, then sort by closest
-sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(Score, k)]
+sortNeighbours :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> [(Score, k)]
 sortNeighbours f u s = sort $ map dist s
   where iden (Rating a m) = a
         dist sample = (computeDistance f u sample, iden sample)
         
 -- | Return the head from sortNeighbours
-closestNeighbour :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> (Score, k)
+closestNeighbour :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> (Score, k)
 closestNeighbour f u s = head $ sortNeighbours f u s
 
-closestRatings :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> ScoreMap k
+closestRatings :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> ScoreMap k
 closestRatings f u s = nrRatings
   where neighbour = snd $ closestNeighbour f u s
         nrRatings = ratings $ head $ filter isNeighbour s
         isNeighbour (Rating k _) = k == neighbour
 
-recommend :: (Ord k) => ([Score] -> [Score] -> Score) -> UserSamples k k -> [UserSamples k k] -> [(k, Score)]
+recommend :: (Ord k) => ([Score] -> [Score] -> Score) -> Sample k k -> [Sample k k] -> [(k, Score)]
 recommend f u s = sortBy highestFirst recommendations
   where uRatings  = ratings u
         clRatings = closestRatings f u s

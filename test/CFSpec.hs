@@ -72,7 +72,7 @@ haileyNeighbours = [(2.0, "Veronica"), (4.0, "Chan"),(4.0, "Sam"), (4.5, "Dan"),
 
 emptySamples = Rating "Empty" M.empty
 
-nothingInCommon :: Ord b => UserSamples String b -> UserSamples String b -> UserSamples String b
+nothingInCommon :: Ord b => Sample String b -> Sample String b -> Sample String b
 nothingInCommon u1 u2 = Rating "Diff" diff
   where diff = M.difference (ratings u1) (ratings u2)
 
