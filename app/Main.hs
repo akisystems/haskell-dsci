@@ -14,11 +14,11 @@ line = sepBy cell (char '\t')
 cell = many (noneOf "\t\n\r")
 -- cell = quotedCell <|> many (noneOf ",\n\r")
 
-quotedCell =
+--quotedCell =
     -- do char '"'
-    do content <- many
+    --do content <- many
     --   char '"' <?> "quote at end of cell"
-       return content
+       --return content
 
 quotedChar =
         noneOf "\""
@@ -48,18 +48,17 @@ csvToSamples samples = M.foldlWithKey toRating [] $ csvToMap
 parseCSV :: String -> String -> Either ParseError [[String]]
 parseCSV iden input = parse csvFile ("(" ++ iden ++ ")") input
 
+makeRecs :: [[String]] -> [(a, Score)]
+makeRecs csv = recommend euclidean userSample samples
+  where samples = map csvToSamples csv
+        userSample = findUser user samples
+
 doSuggest :: String -> String -> IO ()
 doSuggest file user = do
     contents <- readFile file
     case (parseCSV file contents) of
         Left  e -> putStrLn $ "CSV parse error: " ++ (show e)
-        Right s -> let samples = map csvToSamples s
-                   in putStrLn $ show samples
-        -- Right s  -> let samples    = map csvToSamples s
-        --                 userSample = findUser user samples
-        --                 recs       = recommend euclidean userSample samples
-        --                 printRec (item, sc) = putStrLn ("Item: " ++ item ++ ", Score: " ++ (show sc))
-        --             in mapM_ printRec recs
+        Right s -> putStrLn $ show $ makeRecs
 
 main :: IO ()
 main = do
