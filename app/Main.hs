@@ -12,13 +12,6 @@ csvFile :: GenParser Char st [[String]]
 csvFile = endBy line eol
 line = sepBy cell (char '\t')
 cell = many (noneOf "\t\n\r")
--- cell = quotedCell <|> many (noneOf ",\n\r")
-
---quotedCell =
-    -- do char '"'
-    --do content <- many
-    --   char '"' <?> "quote at end of cell"
-       --return content
 
 quotedChar =
         noneOf "\""
@@ -36,21 +29,19 @@ data Opts = Suggest { csv :: String, user :: String } -- the recommendation
 
 instance ParseRecord Opts
 
--- | Convert the CSV records to our Samples; ugly & not proud of this!
+-- | Convert the CSV records to our Samples
 csvToSamples :: [[String]] -> [Sample String String]
 csvToSamples samples = M.foldlWithKey toRating [] $ csvToMap
-    where toTuple [u,i,r,_] = (u, (i, read r :: Float)) -- extract only the uid, item id and rating
-          tuples = map toTuple samples
-          theFold m (u, ratingTupe) = M.insertWith (++) u [ratingTupe] m
-          csvToMap = foldl theFold M.empty tuples -- Fold the tuples into a map of uid->[(itemId, rating)]
+    where insUserRating m [u,i,r,_] = M.insertWith (++) u [(i, read r :: Float)] m -- insert a tuple at key u, into m, "squashing" repeat rows in the CSV
+          csvToMap = foldl insUserRating M.empty samples -- Fold the tuples into a map of uid->[(itemId, rating)]
           toRating x k v = (Rating k (M.fromList v)) : x
 
 parseCSV :: String -> String -> Either ParseError [[String]]
 parseCSV iden input = parse csvFile ("(" ++ iden ++ ")") input
 
-makeRecs :: [[String]] -> [(a, Score)]
-makeRecs csv = recommend euclidean userSample samples
-  where samples = map csvToSamples csv
+makeRecs :: String -> [[String]] -> [(String, Score)]
+makeRecs user csv = recommend euclidean userSample samples
+  where samples    = csvToSamples csv
         userSample = findUser user samples
 
 doSuggest :: String -> String -> IO ()
@@ -58,11 +49,11 @@ doSuggest file user = do
     contents <- readFile file
     case (parseCSV file contents) of
         Left  e -> putStrLn $ "CSV parse error: " ++ (show e)
-        Right s -> putStrLn $ show $ makeRecs
+        Right s -> putStrLn $ show $ makeRecs user s
 
 main :: IO ()
 main = do
     opts <- getRecord "dsci"
     case opts of
-        (Suggest f u) -> doSuggest f u
+        Suggest csvFile userId -> doSuggest csvFile userId
         _ -> putStrLn "What?"
