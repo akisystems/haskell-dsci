@@ -8,10 +8,17 @@ import qualified Data.Map.Strict as M
 import Options.Generic
 import Text.ParserCombinators.Parsec
 
+class ParseCSV o where
+    getCSV :: o -> IO [[String]]
+    
+instance ParseCSV Opt where
+    getCSV (Suggest c _) = (readFile c) >>= (parseIt . parseCSV)
+    getCSV (Closest c _) = (readFile c) >>= (parseIt . parseCSV)
+
 csvFile :: GenParser Char st [[String]]
 csvFile = endBy line eol
-line = sepBy cell (char '\t')
-cell = many (noneOf "\t\n\r")
+line = sepBy cell (char ',')
+cell = many (noneOf ",\n\r")
 
 quotedChar =
         noneOf "\""
@@ -29,12 +36,14 @@ data Opt = Suggest { csv :: String, user :: String } -- the recommendation
 
 instance ParseRecord Opt
 
+insUserRating :: M.Map String [(String, Score)] -> [String] -> M.Map String [(String, Score)]
+insUserRating m (u:i:r:_) = M.insertWith (++) u [(i, read r :: Float)] m -- insert a tuple at key u, into m, "squashing" repeat rows in the CSV
+insUserRating m _ = error "Invalid CSV structure - give me 3 columns"
+
 -- | Convert the CSV records to our Samples
 csvToSamples :: [[String]] -> [Sample String String]
 csvToSamples samples = M.foldlWithKey toRating [] $ csvToMap
-    where insUserRating m [u,i,r] = M.insertWith (++) u [(i, read r :: Float)] m -- insert a tuple at key u, into m, "squashing" repeat rows in the CSV
-          insUserRating m [] = error "Empty list"
-          csvToMap = foldl insUserRating M.empty samples -- Fold the tuples into a map of uid->[(itemId, rating)]
+    where csvToMap = foldl insUserRating M.empty samples -- Fold the tuples into a map of uid->[(itemId, rating)]
           toRating x k v = (Rating k (M.fromList v)) : x
 
 parseCSV :: String -> Either ParseError [[String]]
@@ -44,6 +53,11 @@ makeRecs :: String -> [[String]] -> [(String, Score)]
 makeRecs user csv = recommend euclidean userSample samples
   where samples    = csvToSamples csv
         userSample = findUser user samples
+        
+closest :: String -> [[String]] -> [(Score, String)]
+closest = closestNeighbour euclidean userSample samples
+    where samples = csvToSamples csv
+          userSample = findUser user samples
 
 doSuggest :: String -> String -> IO ()
 doSuggest file user = do
@@ -56,19 +70,11 @@ parseIt :: (Either ParseError [[String]]) -> IO [[String]]
 parseIt (Left e) = error $ show e
 parseIt (Right c) = return c
 
-class Runner o where
-    run :: o -> a
 
-class ParseCSV o where
-    getCSV :: o -> IO [[String]]
-
-instance ParseCSV Opt where
-    getCSV (Suggest c _) = (readFile c) >>= (parseIt . parseCSV)
-    getCSV (Closest c _) = (readFile c) >>= (parseIt . parseCSV)
-        
 main :: IO ()
 main = do
     opts <- getRecord "dsci"
     csv <- getCSV opts
     case opts of
         Suggest _ u -> putStrLn $ show $ makeRecs u csv
+        Closest _ u -> putStrLn $ show $ closest u csv
